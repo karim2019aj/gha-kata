@@ -1,0 +1,62 @@
+name: test_and_deploy
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: " Que souhaitez vous faire ? "
+        required: true
+        type: choice
+        options:
+          - déploiement
+          - test add
+          - test sub
+          - tous les tests
+        dfault: "déploiement"
+
+jobs:
+  test_add:
+    runs-on: ubuntu-latest
+    if: inputs.actions != 'test sub' || github.event_name == 'push'
+    steps:
+      - name: checkout du dépôt
+        uses: actions/checkout@v3
+      - name: setup de node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: setup de ci
+        run: npm ci
+      - name: test
+        run: npm run test_add
+
+  test_sub:
+    runs-on: ubuntu-latest
+    if: inputs.actions != 'test add' || github.event_name == 'push'
+    steps:
+      - name: checkout du dépôt
+        uses: actions/checkout@v3
+      - name: setup de node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: setup de ci
+        run: npm ci
+      - name: test
+        run: npm run test_sub
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: inputs.actions != 'déploiement'
+    needs: [test_add, test_sub]
+    steps:
+      - name: deploy
+        run: echo " déploiement "
+
+  notify_failure:
+    runs-on: ubuntu-latest
+    needs: [deploy, test_add, test_sub]
+    if: ${{ failure() }}
+    steps:
+      - name: notify_failure
+        run: echo "Echec du déploiement "
