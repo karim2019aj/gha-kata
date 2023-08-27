@@ -48,15 +48,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: inputs.actions != 'déploiement'
-    needs: [test_add, test_sub]
     steps:
       - name: deploy
         run: echo " déploiement "
 
   notify_failure:
     runs-on: ubuntu-latest
-    needs: [deploy, test_add, test_sub]
-    if: ${{ failure() }}
     steps:
       - name: notify_failure
         run: echo "Echec du déploiement "
